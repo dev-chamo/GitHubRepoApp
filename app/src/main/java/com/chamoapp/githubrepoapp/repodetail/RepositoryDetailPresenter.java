@@ -1,17 +1,15 @@
 package com.chamoapp.githubrepoapp.repodetail;
 
 
-import android.util.Log;
 
-import com.chamoapp.githubrepoapp.repodetail.RepositoryDetailContract;
 import com.chamoapp.githubrepoapp.data.GitHubService;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.functions.Consumer;
+import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
 
 public class RepositoryDetailPresenter implements RepositoryDetailContract.UserActions {
-    final RepositoryDetailContract.View mRepositoryDetailView;
+    private RepositoryDetailContract.View mRepositoryDetailView;
     private GitHubService mGitHubService;
     private GitHubService.RepositoryItem mRepositoryItem;
 
@@ -37,17 +35,21 @@ public class RepositoryDetailPresenter implements RepositoryDetailContract.UserA
         mGitHubService.detailRepo(owner, repoName)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Consumer<GitHubService.RepositoryItem>() {
+                .subscribe(new DisposableObserver<GitHubService.RepositoryItem>() {
                     @Override
-                    public void accept(GitHubService.RepositoryItem repositoryItem) {
+                    public void onNext(GitHubService.RepositoryItem repositoryItem) {
                         mRepositoryItem = repositoryItem;
                         mRepositoryDetailView.showRepositoryInfo(mRepositoryItem);
                     }
-                }, new Consumer<Throwable>() {
+
                     @Override
-                    public void accept(Throwable throwable) {
-                        Log.d("koo", throwable.getMessage());
+                    public void onError(Throwable e) {
                         mRepositoryDetailView.showError("읽을 수 없습니다.");
+                    }
+
+                    @Override
+                    public void onComplete() {
+
                     }
                 });
     }
